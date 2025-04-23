@@ -1,0 +1,76 @@
+services:
+  postgres:
+    container_name: postgres
+    build: ./postgres
+    ports:
+      - 1111:5432
+    volumes:
+      - ./data:/data
+    env_file:
+      - ./postgres/conf/.env
+    networks:
+      - my_network
+    command: >
+      postgres
+      -c wal_level=replica
+      -c max_wal_senders=10
+      -c wal_keep_size=64
+      -c archive_mode=on
+      -c hba_file=/etc/postgresql/pg_hba.conf
+      
+  postgres_replica:
+    container_name: postgres_sec
+    build: ./postgres_sec
+    ports:
+      - 1112:5432
+    volumes:
+      - ./data:/data
+    env_file:
+      - ./postgres_sec/conf/.env
+    networks:
+      - my_network
+    depends_on:
+      - postgres
+    command: >
+      bash -c "
+      if [ ! -s /var/lib/postgresql/data/PG_VERSION ]; then
+        echo 'Replica data directory is empty. Running pg_basebackup...';
+        chown -R postgres:postgres /var/lib/postgresql/data
+        chmod 0700 /var/lib/postgresql/data
+        export PGPASSWORD=rep@123;
+        until pg_basebackup -h postgres -p 5432 -U replicator -D /var/lib/postgresql/data -Fp -Xs -P -R;
+        do echo 'Waiting for primary...'; sleep 2; done;
+      fi;
+      exec postgres"
+  redis:
+      container_name: redis
+      build: ./redis
+      ports:
+        - "6379:6379"
+      networks:
+        - my_network
+  
+  flask:
+    build: ./flask
+    container_name: flask-api
+    environment:
+      - FLASK_ENV=development
+    ports:
+      - "5000:5000"
+    depends_on:
+      - postgres
+    volumes:
+      - ./flask/app:/app
+    networks:
+      - my_network
+
+networks:
+  my_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.2.0/24
+
+volumes:
+  pg_primary_data:
+  pg_secondary_data:

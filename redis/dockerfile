@@ -1,0 +1,7 @@
+FROM redis:7
+
+COPY ./conf/* /data/
+
+RUN chmod +x /data/setup.sh
+
+

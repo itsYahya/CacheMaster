@@ -5,21 +5,21 @@ This project involves a PostgreSQL setup with a primary and replica instance, in
 
 ### primary node
    It gets lunched first of course, but there's some thing that we need to change:
-      ```
+
          - pg_hba.conf           => this one to allow the replication from second postgres node
          - init-replication.sql  => this file to create the replicator role, which will be used by the second node
          - .env                  => this file holds the env variables
-      ```
+
    *Triggers* won't be inserted automaticly, go ahead and add them when the primary node is up and running.
 
 ### replication node
    To run properly, you need to keep those points in mind:
-      ```
+
          - /var/lib/postgresql/data => this file needs to be empty
          - /var/lib/postgresql/data => this file also needs to be owned by postgres user
          - /var/lib/postgresql/data => adjust the permision to 0700
          - pg_basebackup ...        => this is how postgres will be lunched (as a backup)
-      ```
+
    Check docker-compose.yml file
 
 ### redis

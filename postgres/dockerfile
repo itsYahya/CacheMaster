@@ -1,0 +1,5 @@
+FROM postgres:17
+
+COPY ./conf/pg_hba.conf /etc/postgresql/
+
+COPY ./conf/*.sql /docker-entrypoint-initdb.d/

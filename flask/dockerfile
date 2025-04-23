@@ -1,0 +1,13 @@
+FROM debian:latest
+
+RUN apt update && apt upgrade -y
+
+RUN apt install python3 python3.11-venv -y
+
+WORKDIR /application
+
+COPY ./tools/ .
+
+RUN chmod +x ./script.sh
+
+CMD [ "./script.sh" ]
